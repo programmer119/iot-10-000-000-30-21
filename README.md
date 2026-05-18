@@ -1,21 +1,29 @@
-# AI Insight Studio
+# Manufacturing Monitoring XFDL Prototype
 
-React 기반의 인터랙티브 데이터 분석 대시보드 프로토타입입니다.
+Nexacro-style manufacturing monitoring prototype for legacy data integration and visualization.
 
-## Features
+## What This Shows
 
-- 실시간 시계열 차트
-- 모드별 KPI 전환
-- 세그먼트 히트맵 선택
-- 분석 파이프라인 단계 전환
-- 민감도 슬라이더 기반 모델 점수 변화
+- `MonitoringDashboard.xfdl`: Nexacro Form/Dataset/Grid/Button/Chart-style source file
+- `build/`: browser-runnable static build generated from the XFDL concept
+- Legacy source examples from MES, ERP, and equipment gateway
+- Processing flow examples for collection, cleansing, aggregation, threshold checks, and alarms
 
-## Scripts
+## Local Preview
+
+Open the build output through any static server:
 
 ```bash
-npm install
-npm run dev
-npm run build
+node server.js
 ```
 
-GitHub Pages 배포는 `.github/workflows/pages.yml`에서 자동으로 처리됩니다.
+Then open:
+
+```text
+http://127.0.0.1:4589/build/
+```
+
+## GitHub Pages
+
+This repository includes a GitHub Actions workflow that deploys the `build/` directory to GitHub Pages.
+
