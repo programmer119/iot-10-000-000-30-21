@@ -1,347 +1,248 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
   Activity,
-  ArrowUpRight,
-  BarChart3,
-  Brain,
+  AlertTriangle,
+  BatteryCharging,
   CheckCircle2,
-  Database,
-  Download,
-  Eye,
-  Filter,
+  CloudSun,
+  Cpu,
+  Droplets,
+  Factory,
   Gauge,
-  LineChart,
-  Pause,
-  Play,
+  RadioTower,
   RefreshCw,
-  Search,
-  Settings2,
-  Sparkles,
-  UploadCloud,
+  Router,
+  ShieldCheck,
+  Thermometer,
+  Wifi,
   Zap
 } from 'lucide-react';
 import './styles.css';
 
-const datasets = {
-  sales: {
-    label: 'Sales Forecast',
-    accent: '#12a87d',
-    summary: '매출 예측',
-    kpis: ['93.8%', '1.7M', '18.4%', '42ms'],
-    series: [31, 44, 39, 57, 63, 61, 78, 84, 79, 92, 88, 96],
-    heat: [62, 78, 41, 86, 55, 92, 73, 68, 95, 49, 82, 76],
-    pipeline: [96, 88, 81, 74]
+const sites = [
+  {
+    id: 'plant-a',
+    name: 'Plant A',
+    place: '성남 스마트팩토리',
+    accent: '#1e9b7a',
+    online: 128,
+    warning: 4,
+    power: 84,
+    temp: 27.4,
+    humidity: 43,
+    series: [62, 68, 71, 77, 73, 82, 88, 84, 91, 86, 94, 97]
   },
-  ops: {
-    label: 'Operation Signals',
-    accent: '#4267e8',
-    summary: '운영 이상탐지',
-    kpis: ['88.1%', '24.6K', '7.2%', '31ms'],
-    series: [74, 69, 76, 71, 82, 64, 58, 73, 86, 91, 77, 83],
-    heat: [48, 67, 89, 52, 74, 38, 96, 81, 69, 57, 91, 63],
-    pipeline: [91, 84, 69, 86]
+  {
+    id: 'cold-chain',
+    name: 'Cold Chain',
+    place: '냉장 물류 센터',
+    accent: '#3478f6',
+    online: 96,
+    warning: 2,
+    power: 76,
+    temp: 3.2,
+    humidity: 61,
+    series: [42, 49, 46, 55, 58, 64, 69, 67, 72, 78, 74, 81]
   },
-  risk: {
-    label: 'Risk Modeling',
-    accent: '#ef6b4a',
-    summary: '리스크 모델링',
-    kpis: ['91.4%', '384K', '11.9%', '56ms'],
-    series: [43, 51, 66, 59, 72, 81, 69, 77, 85, 73, 89, 94],
-    heat: [91, 84, 76, 69, 88, 93, 57, 62, 79, 85, 71, 96],
-    pipeline: [88, 77, 92, 79]
+  {
+    id: 'energy-hub',
+    name: 'Energy Hub',
+    place: '분산 전력 관제',
+    accent: '#e59b2d',
+    online: 212,
+    warning: 9,
+    power: 91,
+    temp: 31.8,
+    humidity: 38,
+    series: [73, 75, 82, 79, 86, 92, 88, 95, 91, 97, 94, 99]
   }
-};
+];
 
-const pipelineLabels = ['Ingest', 'Clean', 'Train', 'Visualize'];
-const kpiLabels = ['모델 정확도', '처리 레코드', '변화율', '응답 속도'];
-const chartLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const devices = [
+  { name: 'Gateway-01', type: 'MQTT', health: 98, icon: Router },
+  { name: 'Temp Sensor', type: 'LoRa', health: 91, icon: Thermometer },
+  { name: 'Power Meter', type: 'Modbus', health: 87, icon: Zap },
+  { name: 'Edge CPU', type: 'Linux', health: 74, icon: Cpu }
+];
 
-function linePath(values) {
+function pathFor(values) {
   return values
     .map((value, index) => {
-      const x = 18 + index * 32;
-      const y = 142 - value * 1.18;
+      const x = 16 + index * 34;
+      const y = 132 - value;
       return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
     })
     .join(' ');
 }
 
-function LiveChart({ data, tick }) {
-  const animatedSeries = data.series.map((value, index) => {
-    const wave = Math.sin((tick + index) / 2.2) * 5;
-    return Math.max(24, Math.min(98, value + wave));
-  });
-
-  return (
-    <div className="chart-panel">
-      <div className="panel-title">
-        <div>
-          <span>Live Trend</span>
-          <h2>{data.summary} 시계열</h2>
-        </div>
-        <LineChart size={22} />
-      </div>
-      <svg className="line-chart" viewBox="0 0 390 160" role="img" aria-label="실시간 추세 차트">
-        {[30, 60, 90, 120].map((y) => (
-          <line key={y} x1="18" x2="372" y1={y} y2={y} />
-        ))}
-        <path className="area" d={`${linePath(animatedSeries)} L 370 148 L 18 148 Z`} />
-        <path className="trend" d={linePath(animatedSeries)} style={{ stroke: data.accent }} />
-        {animatedSeries.map((value, index) => (
-          <circle
-            key={chartLabels[index]}
-            cx={18 + index * 32}
-            cy={142 - value * 1.18}
-            r={index === tick % 12 ? 6 : 4}
-            style={{ fill: index === tick % 12 ? data.accent : '#ffffff', stroke: data.accent }}
-          />
-        ))}
-      </svg>
-      <div className="chart-labels">
-        {chartLabels.map((label, index) => (
-          <span className={index === tick % 12 ? 'active' : ''} key={label}>
-            {label}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function HeatMap({ data, selectedCell, setSelectedCell }) {
-  return (
-    <div className="panel heat-panel">
-      <div className="panel-title">
-        <div>
-          <span>Signal Heatmap</span>
-          <h2>세그먼트 밀도</h2>
-        </div>
-        <BarChart3 size={22} />
-      </div>
-      <div className="heat-grid">
-        {data.heat.map((value, index) => (
-          <button
-            key={`${value}-${index}`}
-            type="button"
-            className={selectedCell === index ? 'heat-cell selected' : 'heat-cell'}
-            style={{
-              '--heat': value,
-              background: `color-mix(in srgb, ${data.accent} ${value}%, #eef4f1)`
-            }}
-            onClick={() => setSelectedCell(index)}
-            aria-label={`세그먼트 ${index + 1}, 강도 ${value}`}
-          >
-            <strong>{value}</strong>
-            <span>S{index + 1}</span>
-          </button>
-        ))}
-      </div>
-      <p className="mini-copy">
-        선택 세그먼트 S{selectedCell + 1}: 상관 신호 {data.heat[selectedCell]}점, 집중 분석 대상으로 표시됨
-      </p>
-    </div>
-  );
-}
-
-function Pipeline({ data, activeStep, setActiveStep }) {
-  return (
-    <div className="panel">
-      <div className="panel-title">
-        <div>
-          <span>Workflow</span>
-          <h2>분석 파이프라인</h2>
-        </div>
-        <Settings2 size={22} />
-      </div>
-      <div className="pipeline">
-        {pipelineLabels.map((label, index) => {
-          const icons = [Database, Filter, Brain, Eye];
-          const Icon = icons[index];
-
-          return (
-            <button
-              key={label}
-              type="button"
-              className={activeStep === index ? 'pipe-step active' : 'pipe-step'}
-              onClick={() => setActiveStep(index)}
-            >
-              <Icon size={20} />
-              <span>{label}</span>
-              <b>{data.pipeline[index]}%</b>
-            </button>
-          );
-        })}
-      </div>
-      <div className="step-meter">
-        <span style={{ width: `${data.pipeline[activeStep]}%`, background: data.accent }} />
-      </div>
-    </div>
-  );
-}
-
-function GaugeCluster({ sensitivity, data }) {
-  const score = Math.round((data.pipeline.reduce((sum, value) => sum + value, 0) / 4) * (0.72 + sensitivity / 360));
-  const clipped = Math.min(99, score);
-  const dash = clipped * 2.64;
-
-  return (
-    <div className="panel gauge-panel">
-      <div className="panel-title">
-        <div>
-          <span>Model Score</span>
-          <h2>운영 적합도</h2>
-        </div>
-        <Gauge size={22} />
-      </div>
-      <svg className="big-gauge" viewBox="0 0 220 130" role="img" aria-label={`운영 적합도 ${clipped}`}>
-        <path d="M28 110a82 82 0 0 1 164 0" />
-        <path className="gauge-fill" d="M28 110a82 82 0 0 1 164 0" strokeDasharray={`${dash} 265`} style={{ stroke: data.accent }} />
-      </svg>
-      <strong>{clipped}</strong>
-      <span>adaptive confidence</span>
-    </div>
-  );
-}
-
 function App() {
-  const [mode, setMode] = useState('sales');
-  const [tick, setTick] = useState(0);
-  const [playing, setPlaying] = useState(true);
-  const [sensitivity, setSensitivity] = useState(58);
-  const [activeStep, setActiveStep] = useState(2);
-  const [selectedCell, setSelectedCell] = useState(5);
-  const data = datasets[mode];
+  const [siteId, setSiteId] = useState('plant-a');
+  const [tick, setTick] = useState(2);
+  const site = sites.find((item) => item.id === siteId);
 
-  useEffect(() => {
-    if (!playing) return undefined;
-    const timer = window.setInterval(() => {
-      setTick((current) => current + 1);
-      setActiveStep((current) => (current + 1) % pipelineLabels.length);
-    }, 1200);
-    return () => window.clearInterval(timer);
-  }, [playing]);
-
-  const dynamicKpis = useMemo(
-    () =>
-      data.kpis.map((value, index) => ({
-        label: kpiLabels[index],
-        value,
-        delta: Math.round(Math.sin((tick + index) / 1.7) * 8 + sensitivity / 12)
-      })),
-    [data, sensitivity, tick]
+  const liveSeries = useMemo(
+    () => site.series.map((value, index) => Math.min(100, Math.max(30, value + Math.sin((tick + index) / 1.8) * 5))),
+    [site, tick]
   );
 
   return (
-    <main className="app-shell" style={{ '--accent': data.accent }}>
-      <section className="workspace">
-        <aside className="sidebar">
+    <main className="iot-shell" style={{ '--accent': site.accent }}>
+      <section className="console">
+        <aside className="side">
           <div className="brand">
-            <Sparkles size={21} />
-            <span>Insight Studio</span>
+            <RadioTower size={24} />
+            <span>IoT Control</span>
           </div>
-
-          <div className="mode-stack">
-            {Object.entries(datasets).map(([key, item]) => (
+          <div className="site-list">
+            {sites.map((item) => (
               <button
-                key={key}
+                key={item.id}
                 type="button"
-                className={mode === key ? 'mode active' : 'mode'}
-                onClick={() => {
-                  setMode(key);
-                  setSelectedCell(0);
-                }}
+                className={siteId === item.id ? 'site active' : 'site'}
+                onClick={() => setSiteId(item.id)}
               >
-                <span style={{ background: item.accent }} />
-                {item.label}
+                <strong>{item.name}</strong>
+                <span>{item.place}</span>
               </button>
             ))}
           </div>
-
-          <div className="upload-card">
-            <UploadCloud size={24} />
-            <strong>Dataset Ready</strong>
-            <p>CSV, API, DB stream 입력을 한 화면에서 모니터링하는 업무형 UI 샘플</p>
+          <div className="network-card">
+            <Wifi size={26} />
+            <strong>Network Stable</strong>
+            <p>Edge gateway, sensor mesh, cloud pipeline status synchronized.</p>
           </div>
         </aside>
 
-        <section className="main-stage">
+        <section className="stage">
           <header className="topbar">
             <div>
-              <span className="eyebrow">React Interactive Dashboard</span>
-              <h1>AI 데이터 분석 웹 프로그램</h1>
+              <span>Real-time Device Monitoring</span>
+              <h1>{site.place}</h1>
             </div>
-            <div className="top-actions">
-              <button type="button" onClick={() => setPlaying((value) => !value)} aria-label="재생 전환">
-                {playing ? <Pause size={18} /> : <Play size={18} />}
-              </button>
-              <button type="button" onClick={() => setTick((value) => value + 1)} aria-label="데이터 새로고침">
-                <RefreshCw size={18} />
-              </button>
-              <button type="button" aria-label="내보내기">
-                <Download size={18} />
-              </button>
-            </div>
+            <button type="button" onClick={() => setTick((value) => value + 1)}>
+              <RefreshCw size={19} />
+              Sync
+            </button>
           </header>
 
-          <div className="hero-strip">
-            <div className="hero-copy">
-              <h2>{data.summary} 분석 콘솔</h2>
-              <p>
-                데이터 수집, 전처리, 모델링, 시각화까지 이어지는 웹 프로그램 화면을 가정한 동적 React 프로토타입입니다.
-              </p>
-            </div>
-            <div className="search-box">
-              <Search size={18} />
-              <span>segment: S{selectedCell + 1} / sensitivity: {sensitivity}</span>
-            </div>
-          </div>
-
-          <section className="kpi-grid">
-            {dynamicKpis.map((item, index) => (
-              <article className="kpi-card" key={item.label}>
-                <span>{item.label}</span>
-                <strong>{item.value}</strong>
-                <b className={item.delta >= 0 ? 'up' : 'down'}>
-                  <ArrowUpRight size={16} />
-                  {item.delta > 0 ? '+' : ''}
-                  {item.delta}
-                </b>
-                <div className="spark">
-                  {data.series.slice(index, index + 6).map((value, barIndex) => (
-                    <i key={`${value}-${barIndex}`} style={{ height: `${32 + ((value + tick * 3) % 50)}%` }} />
-                  ))}
-                </div>
-              </article>
-            ))}
-          </section>
-
-          <section className="content-grid">
-            <LiveChart data={data} tick={tick} />
-            <GaugeCluster data={data} sensitivity={sensitivity} />
-            <HeatMap data={data} selectedCell={selectedCell} setSelectedCell={setSelectedCell} />
-            <Pipeline data={data} activeStep={activeStep} setActiveStep={setActiveStep} />
-          </section>
-
-          <section className="control-deck">
+          <section className="hero">
             <div>
-              <div className="deck-title">
-                <Activity size={18} />
-                <strong>민감도 조정</strong>
+              <span>Live Operations</span>
+              <h2>센서, 게이트웨이, 전력 상태를 한 화면에서 관제</h2>
+              <p>현장 장비의 연결 상태와 이상 신호를 실시간 대시보드로 확인하는 IoT 웹 콘솔입니다.</p>
+            </div>
+            <div className="status-pill">
+              <CheckCircle2 size={24} />
+              <strong>{site.online}</strong>
+              <span>devices online</span>
+            </div>
+          </section>
+
+          <section className="metric-grid">
+            <article>
+              <Thermometer size={24} />
+              <span>Temperature</span>
+              <strong>{site.temp}°C</strong>
+            </article>
+            <article>
+              <Droplets size={24} />
+              <span>Humidity</span>
+              <strong>{site.humidity}%</strong>
+            </article>
+            <article>
+              <BatteryCharging size={24} />
+              <span>Power Load</span>
+              <strong>{site.power}%</strong>
+            </article>
+            <article className={site.warning > 5 ? 'warn' : ''}>
+              <AlertTriangle size={24} />
+              <span>Warnings</span>
+              <strong>{site.warning}</strong>
+            </article>
+          </section>
+
+          <section className="dashboard">
+            <article className="panel chart-panel">
+              <div className="panel-head">
+                <div>
+                  <span>Telemetry Flow</span>
+                  <h2>수집 데이터 추세</h2>
+                </div>
+                <Activity size={23} />
               </div>
-              <input
-                type="range"
-                min="20"
-                max="90"
-                value={sensitivity}
-                onChange={(event) => setSensitivity(Number(event.target.value))}
-              />
-            </div>
-            <div className="status-row">
-              <CheckCircle2 size={19} />
-              <span>Active simulation running on React state</span>
-              <Zap size={18} />
-            </div>
+              <svg viewBox="0 0 420 150" className="trend-chart" role="img" aria-label="Telemetry trend chart">
+                {[38, 72, 106].map((line) => (
+                  <line key={line} x1="16" x2="402" y1={line} y2={line} />
+                ))}
+                <path className="area" d={`${pathFor(liveSeries)} L 402 142 L 16 142 Z`} />
+                <path className="line" d={pathFor(liveSeries)} />
+                {liveSeries.map((value, index) => (
+                  <circle key={index} cx={16 + index * 34} cy={132 - value} r={index === tick % 12 ? 6 : 4} />
+                ))}
+              </svg>
+            </article>
+
+            <article className="panel map-panel">
+              <div className="panel-head">
+                <div>
+                  <span>Device Map</span>
+                  <h2>현장 노드 상태</h2>
+                </div>
+                <Factory size={23} />
+              </div>
+              <div className="node-map">
+                {Array.from({ length: 15 }).map((_, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    className={(index + tick) % 7 === 0 ? 'node alert' : 'node'}
+                    aria-label={`node ${index + 1}`}
+                  />
+                ))}
+              </div>
+            </article>
+
+            <article className="panel device-panel">
+              <div className="panel-head">
+                <div>
+                  <span>Edge Devices</span>
+                  <h2>장비 헬스 체크</h2>
+                </div>
+                <ShieldCheck size={23} />
+              </div>
+              <div className="device-list">
+                {devices.map((device, index) => {
+                  const Icon = device.icon;
+                  const health = Math.max(58, Math.min(99, device.health + Math.round(Math.sin(tick + index) * 4)));
+                  return (
+                    <div className="device" key={device.name}>
+                      <Icon size={21} />
+                      <div>
+                        <strong>{device.name}</strong>
+                        <span>{device.type}</span>
+                      </div>
+                      <b>{health}%</b>
+                    </div>
+                  );
+                })}
+              </div>
+            </article>
+
+            <article className="panel weather-panel">
+              <div className="panel-head">
+                <div>
+                  <span>Environment</span>
+                  <h2>외부 환경</h2>
+                </div>
+                <CloudSun size={23} />
+              </div>
+              <div className="gauge">
+                <Gauge size={58} />
+                <strong>{site.power}</strong>
+                <span>facility efficiency</span>
+              </div>
+            </article>
           </section>
         </section>
       </section>
